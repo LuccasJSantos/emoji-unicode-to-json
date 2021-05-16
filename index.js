@@ -7,21 +7,15 @@ let activeGroup = ''
 
 arr.forEach((line) => {
   const isGroupLine = line.includes(' group: ')
-  const isEmojiLine = line.includes('fully-qualified')
+  const isEmojiLine = line.includes('fully-qualified     # ')
 
   if (isGroupLine) {
     activeGroup = /(?<=# group: ).+/g.exec(line)[0]
-    activeGroup = activeGroup.toLowerCase()
-    activeGroup = activeGroup.split(' ').join('_')
-    activeGroup = activeGroup.replace('&', 'and')
     if (!result[activeGroup])
-      result[activeGroup] = {
-        group_img: '',
-        emojis: []
-      }
+      result[activeGroup] = []
   } else if (isEmojiLine) {
-    const emoji = /(?<=fully-qualified     # )(.+)(?= E)/g.exec(line)[0]
-    result[activeGroup].emojis.push(emoji)
+    const emoji = /(?<=fully-qualified     # ).+?(?= E)/g.exec(line)[0]
+    result[activeGroup].push(emoji)
   }
 })
 
