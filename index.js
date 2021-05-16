@@ -1,29 +1,30 @@
 const fs = require('fs')
+const { includes, match, pipe, head, map, cond, T, always, filter, isNil, complement, split, converge, objOf, tail, mergeAll } = require('ramda')
 const str = fs.readFileSync('./emoji.txt', 'utf-8')
-const arr = str.split('\n')
-const result = {}
 
-let activeGroup = ''
+const groupMatch = match(/(?=# group).+?(?=(?:# group|# subgroup: subdivision-flag))/gs)
+const isGroup = includes('group:')
+const isEmoji = includes('fully-qualified')
+const getGroup = pipe(match(/(?<=# group: ).+/g), head)
+const getEmoji = pipe(match(/(?<=fully-qualified     # ).+?(?= E)/g), head)
+const toEmojiMap = converge(objOf, [head, tail])
 
-arr.forEach((line) => {
-  const isGroupLine = line.includes(' group: ')
-  const isEmojiLine = line.includes('fully-qualified')
+const fetchEmojis = pipe(
+  groupMatch,
+  map(pipe(
+    split('\n'),
+    map(cond([
+      [isEmoji, getEmoji],
+      [isGroup, getGroup],
+      [T, always(undefined)]
+    ])),
+    filter(complement(isNil)),
+    toEmojiMap 
+  )),
+  mergeAll
+)
 
-  if (isGroupLine) {
-    activeGroup = /(?<=# group: ).+/g.exec(line)[0]
-    activeGroup = activeGroup.toLowerCase()
-    activeGroup = activeGroup.split(' ').join('_')
-    activeGroup = activeGroup.replace('&', 'and')
-    if (!result[activeGroup])
-      result[activeGroup] = {
-        group_img: '',
-        emojis: []
-      }
-  } else if (isEmojiLine) {
-    const emoji = /(?<=fully-qualified     # )(.+)(?= E)/g.exec(line)[0]
-    result[activeGroup].emojis.push(emoji)
-  }
-})
+const result = fetchEmojis(str)
 
 fs.writeFile('emojis.json', JSON.stringify(result), function (err) {
   if (err) return console.error('Error:', err)
