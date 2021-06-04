@@ -1,5 +1,5 @@
 const fs = require('fs')
-const { includes, match, pipe, head, map, cond, T, always, filter, isNil, complement, split, converge, objOf, tail, mergeAll } = require('ramda')
+const { includes, match, pipe, head, map, cond, T, always, filter, isNil, complement, split, converge, objOf, tail, mergeAll, identity } = require('ramda')
 const str = fs.readFileSync('./emoji.txt', 'utf-8')
 
 const isGroup = includes('group:')
@@ -16,7 +16,7 @@ const fetchEmojis = pipe(
       [isGroup, getGroup],
       [T, always(undefined)]
     ])),
-    filter(complement(isNil)),
+    filter(identity),
     converge(objOf, [head, tail])
   )),
   mergeAll
