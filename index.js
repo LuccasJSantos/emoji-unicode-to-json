@@ -1,11 +1,13 @@
 const fs = require('fs')
-const { includes, match, pipe, head, map, cond, T, always, filter, isNil, complement, split, converge, objOf, tail, mergeAll, identity } = require('ramda')
+const { includes, match, pipe, head, map, cond, T, always, filter, split, converge, objOf, tail, mergeAll, identity } = require('ramda')
 const str = fs.readFileSync('./emoji.txt', 'utf-8')
+
+const regexMatch = (regex) => pipe(match(regex), head)
 
 const isGroup = includes('group:')
 const isEmoji = includes('fully-qualified     # ')
-const getGroup = pipe(match(/(?<=# group: ).+/g), head)
-const getEmoji = pipe(match(/(?<=fully-qualified     # ).+?(?= E)/g), head)
+const getGroup = regexMatch(/(?<=# group: ).+/g)
+const getEmoji = regexMatch(/(?<=fully-qualified     # ).+?(?= E)/g)
 
 const fetchEmojis = pipe(
   match(/(?=# group).+?(?=(?:# group|# Flags subtotal:))/gs),
